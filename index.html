@@ -24,11 +24,24 @@
     .full-width-btn { width: calc(100% - 20px); }
 
     .luxury-card { margin-top: 25px; padding: 20px; border-radius: 8px; background: rgba(26, 26, 26, 0.9); border: 1px solid #c5a02f; box-shadow: 0 0 15px rgba(197, 160, 47, 0.3); }
-    .gold-text { color: #c5a02f; font-size: 24px; margin-top: 0; }
-    .rating { font-size: 28px; font-weight: bold; margin: 15px 0; text-shadow: 0 0 10px rgba(197, 160, 47, 0.8); }
-    .reasons-list { text-align: left; display: inline-block; color: #eee; }
-    .status-text { color: #c5a02f; margin-top: 15px; font-weight: bold; }
+    .gold-text { color: #c5a02f; font-size: 24px; margin-top: 0; margin-bottom: 5px; }
     
+    /* --- NEW PROGRESS BAR STYLES --- */
+    .health-percentage { font-size: 36px; font-weight: bold; margin: 10px 0; text-shadow: 0 0 10px rgba(197, 160, 47, 0.8); }
+    .overall-bar-container { width: 100%; height: 12px; background: #333; border-radius: 6px; margin-bottom: 20px; overflow: hidden; border: 1px solid #555; }
+    .overall-bar-fill { height: 100%; background: linear-gradient(90deg, #ff4d4d, #ffcc00, #33cc33); transition: width 1s ease; }
+    
+    .stat-row { text-align: left; margin-bottom: 15px; }
+    .stat-labels { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px; color: #ddd; }
+    .stat-bar-bg { width: 100%; height: 8px; background: #222; border-radius: 4px; overflow: hidden; }
+    .stat-bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+    
+    /* Colors based on health impact */
+    .fill-good { background-color: #33cc33; box-shadow: 0 0 5px #33cc33; }
+    .fill-moderate { background-color: #ffcc00; box-shadow: 0 0 5px #ffcc00; }
+    .fill-bad { background-color: #ff4d4d; box-shadow: 0 0 5px #ff4d4d; }
+    
+    .status-text { color: #c5a02f; margin-top: 15px; font-weight: bold; }
     .hidden { display: none !important; }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
@@ -58,8 +71,14 @@
 
     <div id="result" class="hidden luxury-card">
       <h2 id="productName" class="gold-text">Product Name</h2>
-      <p id="healthRating" class="rating">Rating</p>
-      <div id="reasonsList" class="reasons-list"></div>
+      <p id="healthRatingText" style="margin:0; color:#aaa;">Overall Health Score</p>
+      <div id="healthPercentage" class="health-percentage">0%</div>
+      
+      <div class="overall-bar-container">
+        <div id="overallBarFill" class="overall-bar-fill" style="width: 0%;"></div>
+      </div>
+      
+      <div id="detailedStats"></div>
     </div>
     
     <p id="statusMessage" class="status-text hidden"></p>
@@ -79,7 +98,6 @@
     const resultDiv = document.getElementById('result');
     const statusMessage = document.getElementById('statusMessage');
 
-    // 1. SCAN BARCODE
     startButton.addEventListener('click', () => {
       resetUI();
       videoElement.classList.remove('hidden');
@@ -98,10 +116,7 @@
       });
     });
 
-    // 2. UPLOAD PICTURE & READ TEXT (OCR)
-    uploadBtn.addEventListener('click', () => {
-      imageUpload.click(); 
-    });
+    uploadBtn.addEventListener('click', () => { imageUpload.click(); });
 
     imageUpload.addEventListener('change', async (event) => {
       const file = event.target.files[0];
@@ -117,32 +132,15 @@
         showStatus("Reading text from image... This might take a few seconds.");
 
         try {
-          // Run Tesseract OCR on the image
           const { data: { text } } = await Tesseract.recognize(imageUrl, 'eng');
-          
-          showStatus("Text recognized! Analyzing nutrition...");
-          console.log("Found text:", text); // Check console to see what it read!
-
-          // Parse the messy text to find numbers
           const extractedData = parseOCRText(text);
-          const healthData = calculateHealthScore(extractedData, text);
-
-          // Update the screen
-          document.getElementById('productName').innerText = "Scanned from Label";
-          document.getElementById('healthRating').innerText = healthData.rating;
-          document.getElementById('reasonsList').innerHTML = healthData.reasons.map(r => `<p>• ${r}</p>`).join('');
-          
-          statusMessage.classList.add('hidden');
-          resultDiv.classList.remove('hidden');
-
+          renderResults("Scanned from Label", extractedData);
         } catch (error) {
-          console.error(error);
           showStatus("Error reading the image. Try a clearer photo.");
         }
       }
     });
 
-    // 3. START OVER
     resetButton.addEventListener('click', () => {
       resetUI();
       codeReader.reset();
@@ -151,7 +149,7 @@
       startButton.classList.remove('hidden');
       uploadBtn.classList.remove('hidden');
       resetButton.classList.add('hidden');
-      imageUpload.value = ''; // clear the file input
+      imageUpload.value = '';
     });
 
     function resetUI() {
@@ -169,7 +167,6 @@
       statusMessage.classList.remove('hidden');
     }
 
-    // 4. API FETCH (For Barcodes)
     async function fetchProductData(barcode) {
       showStatus(`Searching database for: ${barcode}...`);
       try {
@@ -177,14 +174,7 @@
         const data = await response.json();
 
         if (data.status === 1) {
-          statusMessage.classList.add('hidden');
-          resultDiv.classList.remove('hidden');
-          const product = data.product;
-          document.getElementById('productName').innerText = product.product_name || "Unknown Product";
-          
-          const healthData = calculateHealthScore(product.nutriments, product.ingredients_text);
-          document.getElementById('healthRating').innerText = healthData.rating;
-          document.getElementById('reasonsList').innerHTML = healthData.reasons.map(r => `<p>• ${r}</p>`).join('');
+          renderResults(data.product.product_name || "Unknown Product", data.product.nutriments);
         } else {
           showStatus("Product not found. Please use the Upload Picture button instead.");
         }
@@ -193,15 +183,12 @@
       }
     }
 
-    // 5. OCR TEXT PARSER (Looks for "Sugar Xg", "Fat Xg")
     function parseOCRText(text) {
       const extractValue = (keyword) => {
-        // Regex to find the keyword, a number, and 'g' nearby
         const regex = new RegExp(`${keyword}[\\s\\S]{0,20}?(\\d+\\.?\\d*)\\s*g`, 'i');
         const match = text.match(regex);
-        return match ? parseFloat(match[1]) : 0;
+        return match ? parseFloat(match[1]) : null; 
       };
-
       return {
         sugars_100g: extractValue('sugar'),
         fat_100g: extractValue('fat'),
@@ -209,33 +196,80 @@
       };
     }
 
-    // 6. SCORING LOGIC
-    function calculateHealthScore(nutriments, ingredientsText) {
-      let score = 0; let reasons = [];
-      const sugar = nutriments?.sugars_100g || 0;
-      if (sugar > 20) { score -= 2; reasons.push(`High sugar: ${sugar}g`); } else if (sugar >= 10) { score -= 1; } else if (sugar > 0) { score += 1; }
-      const fat = nutriments?.fat_100g || 0;
-      if (fat > 17) { score -= 2; reasons.push(`High fat: ${fat}g`); } else if (fat >= 5) { score -= 1; } else if (fat > 0) { score += 1; }
-      const salt = nutriments?.salt_100g || 0;
-      if (salt > 1.5) { score -= 2; reasons.push(`High salt: ${salt}g`); } else if (salt >= 0.5) { score -= 1; } else if (salt > 0) { score += 1; }
+    // --- NEW RENDERING & PERCENTAGE MATH ---
+    function renderResults(name, nutriments) {
+      statusMessage.classList.add('hidden');
+      resultDiv.classList.remove('hidden');
+      document.getElementById('productName').innerText = name;
 
-      // Check for bad additives if ingredients text was passed in
-      if (ingredientsText) {
-        const badAdditives = ['E102', 'E110', 'E129', 'E621'];
-        const ingredientsUpper = ingredientsText.toUpperCase();
-        const detectedAdditives = badAdditives.filter(add => ingredientsUpper.includes(add));
-        if (detectedAdditives.length > 0) {
-          score -= 1;
-          reasons.push(`Contains flagged additives: ${detectedAdditives.join(', ')}.`);
-        }
+      const sugar = nutriments?.sugars_100g || 0;
+      const fat = nutriments?.fat_100g || 0;
+      const salt = nutriments?.salt_100g || 0;
+
+      // Check if skeleton bug (no data found)
+      if (sugar === 0 && fat === 0 && salt === 0 && nutriments?.sugars_100g === null) {
+        document.getElementById('healthPercentage').innerText = "❓";
+        document.getElementById('overallBarFill').style.width = "0%";
+        document.getElementById('healthPercentage').style.color = "#fff";
+        document.getElementById('detailedStats').innerHTML = "<p>Could not read numbers. Try a clearer photo.</p>";
+        return;
       }
 
-      let rating = "🟡 Moderate";
-      if (score >= 2) rating = "🟢 Healthy";
-      if (score <= -2) rating = "🔴 Unhealthy";
+      // Calculate how "full" each bad stat bar should be (Percentage of daily limits)
+      // Cap at 100% so the bar doesn't overflow
+      const sugarPercent = Math.min(100, (sugar / 25) * 100); 
+      const fatPercent = Math.min(100, (fat / 20) * 100);
+      const saltPercent = Math.min(100, (salt / 1.5) * 100);
+
+      // Overall health formula (100% minus the average of the bad stuff)
+      const averageBadness = (sugarPercent + fatPercent + saltPercent) / 3;
+      const overallHealthPercent = Math.max(0, Math.round(100 - averageBadness));
+
+      // Update Overall UI
+      document.getElementById('healthPercentage').innerText = `${overallHealthPercent}%`;
+      document.getElementById('overallBarFill').style.width = `${overallHealthPercent}%`;
       
-      if (reasons.length === 0) reasons.push("Looks good based on what we could read!");
-      return { score, rating, reasons };
+      // Color code the main percentage text
+      if (overallHealthPercent >= 70) document.getElementById('healthPercentage').style.color = "#33cc33";
+      else if (overallHealthPercent >= 40) document.getElementById('healthPercentage').style.color = "#ffcc00";
+      else document.getElementById('healthPercentage').style.color = "#ff4d4d";
+
+      // Build the individual stat bars
+      const statsHTML = `
+        ${createStatBar('Sugar', sugar, sugarPercent)}
+        ${createStatBar('Fat', fat, fatPercent)}
+        ${createStatBar('Salt', salt, saltPercent)}
+      `;
+      
+      document.getElementById('detailedStats').innerHTML = statsHTML;
+      
+      // Animate the bars after a tiny delay
+      setTimeout(() => {
+        document.getElementById('bar-Sugar').style.width = `${sugarPercent}%`;
+        document.getElementById('bar-Fat').style.width = `${fatPercent}%`;
+        document.getElementById('bar-Salt').style.width = `${saltPercent}%`;
+      }, 100);
+    }
+
+    // Helper function to build the HTML for one progress bar
+    function createStatBar(label, amount, percentage) {
+      let colorClass = "fill-good";
+      let statusText = "Good";
+      
+      if (percentage >= 75) { colorClass = "fill-bad"; statusText = "Too High"; }
+      else if (percentage >= 40) { colorClass = "fill-moderate"; statusText = "Moderate"; }
+
+      return `
+        <div class="stat-row">
+          <div class="stat-labels">
+            <span><strong>${label}:</strong> ${amount}g</span>
+            <span style="color: ${colorClass === 'fill-bad' ? '#ff4d4d' : colorClass === 'fill-moderate' ? '#ffcc00' : '#33cc33'}">${statusText}</span>
+          </div>
+          <div class="stat-bar-bg">
+            <div id="bar-${label}" class="stat-bar-fill ${colorClass}" style="width: 0%;"></div>
+          </div>
+        </div>
+      `;
     }
   </script>
 </body>
