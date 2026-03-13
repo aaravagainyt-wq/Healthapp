@@ -135,3 +135,30 @@
 
       return { score, rating, reasons };
     }
+    // --- NEW IMAGE UPLOAD LOGIC ---
+    const uploadBtn = document.getElementById('uploadBtn');
+    const imageUpload = document.getElementById('imageUpload');
+
+    // 1. When the gold "Upload Picture" button is clicked, trigger the hidden file input
+    uploadBtn.addEventListener('click', () => {
+      imageUpload.click();
+    });
+
+    // 2. When a picture is selected from the camera or gallery
+    imageUpload.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      
+      if (file) {
+        console.log("Picture selected:", file.name);
+        
+        // Hide the scanner stuff and show a status message
+        scannerView.classList.remove('active');
+        resultDiv.classList.add('hidden');
+        
+        // Let the user know it worked
+        statusMessage.innerText = `Awesome! Image loaded: ${file.name}.`;
+        statusMessage.classList.remove('hidden');
+        
+        // We will add the AI / OCR reading magic here next!
+      }
+    });
