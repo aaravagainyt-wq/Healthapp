@@ -2,74 +2,86 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Luxury Food Health Scanner</title>
   <style>
-    /* --- CSS DESIGN --- */
+    /* --- LUXURY CSS DESIGN --- */
     * { box-sizing: border-box; }
     body { font-family: 'Montserrat', sans-serif; text-align: center; margin: 0; padding: 0; color: #eee; background: radial-gradient(circle, #1a1a1a 0%, #121212 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; }
-    .main-container { max-width: 500px; width: 90%; margin: auto; padding: 20px; border-radius: 12px; }
+    .main-container { max-width: 500px; width: 95%; margin: auto; padding: 20px; border-radius: 12px; }
 
     .luxury-title { color: #c5a02f; font-family: 'Playfair Display', serif; font-size: 32px; font-weight: bold; margin-bottom: 5px; text-shadow: 0 0 10px rgba(197, 160, 47, 0.5); }
-    .luxury-instruction { color: #ddd; font-size: 16px; margin-bottom: 25px; }
+    .luxury-instruction { color: #ddd; font-size: 15px; margin-bottom: 25px; }
 
     .viewfinder-container { margin: 15px auto; border-radius: 15px; background: #121212; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); position: relative; overflow: hidden; }
     .viewfinder-inner { position: relative; border-radius: 10px; border: 4px solid transparent; background-clip: padding-box; background-image: linear-gradient(#121212, #121212), linear-gradient(135deg, #c5a02f, #1a1a1a, #c5a02f, #1a1a1a); background-origin: padding-box, border-box; min-height: 250px; display: flex; justify-content: center; align-items: center;}
     
     video { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
-    #uploadedImagePreview { max-width: 100%; max-height: 250px; z-index: 5; border-radius: 8px; }
+    #uploadedImagePreview { max-width: 100%; max-height: 250px; z-index: 5; border-radius: 8px; object-fit: contain; }
 
-    .gold-button { border: none; padding: 12px 24px; margin: 10px 5px; font-size: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; text-transform: uppercase; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.3); color: #121212; background: linear-gradient(135deg, #c5a02f 0%, #d4af37 50%, #c5a02f 100%); width: calc(50% - 15px); display: inline-block; }
-    .gold-button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.4); background: linear-gradient(135deg, #d4af37 0%, #e0c26b 50%, #d4af37 100%); }
-    .full-width-btn { width: calc(100% - 20px); }
+    .gold-button { border: none; padding: 14px 24px; margin: 8px 4px; font-size: 14px; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.3); color: #121212; background: linear-gradient(135deg, #c5a02f 0%, #d4af37 50%, #c5a02f 100%); width: calc(50% - 12px); display: inline-block; letter-spacing: 0.5px; }
+    .gold-button:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(197, 160, 47, 0.4); background: linear-gradient(135deg, #d4af37 0%, #e0c26b 50%, #d4af37 100%); }
+    .full-width-btn { width: calc(100% - 8px); }
 
-    .luxury-card { margin-top: 25px; padding: 20px; border-radius: 8px; background: rgba(26, 26, 26, 0.9); border: 1px solid #c5a02f; box-shadow: 0 0 15px rgba(197, 160, 47, 0.3); }
-    .gold-text { color: #c5a02f; font-size: 24px; margin-top: 0; margin-bottom: 5px; }
+    .luxury-card { margin-top: 25px; padding: 25px 20px; border-radius: 12px; background: rgba(26, 26, 26, 0.95); border: 1px solid #c5a02f; box-shadow: 0 0 20px rgba(197, 160, 47, 0.15); }
+    .gold-text { color: #c5a02f; font-size: 22px; margin-top: 0; margin-bottom: 5px; font-family: 'Playfair Display', serif; }
     
     /* Progress Bars */
-    .health-percentage { font-size: 36px; font-weight: bold; margin: 10px 0; text-shadow: 0 0 10px rgba(197, 160, 47, 0.8); }
-    .overall-bar-container { width: 100%; height: 12px; background: #333; border-radius: 6px; margin-bottom: 20px; overflow: hidden; border: 1px solid #555; }
-    .overall-bar-fill { height: 100%; background: linear-gradient(90deg, #ff4d4d, #ffcc00, #33cc33); transition: width 1s ease; }
+    .health-percentage { font-size: 42px; font-weight: bold; margin: 5px 0 15px 0; text-shadow: 0 0 15px rgba(0, 0, 0, 0.5); }
+    .overall-bar-container { width: 100%; height: 8px; background: #333; border-radius: 4px; margin-bottom: 25px; overflow: hidden; border: 1px solid #444; }
+    .overall-bar-fill { height: 100%; background: linear-gradient(90deg, #ff4d4d, #ffcc00, #33cc33); transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
     
-    .stat-row { text-align: left; margin-bottom: 15px; }
-    .stat-labels { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px; color: #ddd; }
-    .stat-bar-bg { width: 100%; height: 8px; background: #222; border-radius: 4px; overflow: hidden; }
-    .stat-bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
-    .fill-good { background-color: #33cc33; box-shadow: 0 0 5px #33cc33; }
-    .fill-moderate { background-color: #ffcc00; box-shadow: 0 0 5px #ffcc00; }
-    .fill-bad { background-color: #ff4d4d; box-shadow: 0 0 5px #ff4d4d; }
+    .stat-row { text-align: left; margin-bottom: 18px; }
+    .stat-labels { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; color: #ccc; }
+    .stat-bar-bg { width: 100%; height: 6px; background: #222; border-radius: 3px; overflow: hidden; }
+    .stat-bar-fill { height: 100%; border-radius: 3px; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    
+    .fill-good { background-color: #33cc33; box-shadow: 0 0 8px rgba(51, 204, 51, 0.5); }
+    .fill-moderate { background-color: #ffcc00; box-shadow: 0 0 8px rgba(255, 204, 0, 0.5); }
+    .fill-bad { background-color: #ff4d4d; box-shadow: 0 0 8px rgba(255, 77, 77, 0.5); }
 
-    .status-text { color: #c5a02f; margin-top: 15px; font-weight: bold; }
+    .status-text { color: #c5a02f; margin-top: 20px; font-weight: 600; font-size: 14px; padding: 10px; border-radius: 8px; background: rgba(197, 160, 47, 0.1); border: 1px solid rgba(197, 160, 47, 0.3); }
+    .error-text { color: #ff4d4d; border-color: rgba(255, 77, 77, 0.3); background: rgba(255, 77, 77, 0.1); }
     .hidden { display: none !important; }
+
+    /* Loading Spinner */
+    .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(197, 160, 47, 0.3); border-radius: 50%; border-top-color: #c5a02f; animation: spin 1s ease-in-out infinite; margin-right: 10px; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   
   <script type="text/javascript" src="https://unpkg.com/@zxing/library@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
   <div class="main-container">
     <h1 class="luxury-title">Health Scanner</h1>
-    <p class="luxury-instruction">Scan a barcode or upload ingredients.</p>
+    <p class="luxury-instruction">Scan a barcode or upload a nutrition label.</p>
     
     <div id="camera-frame" class="viewfinder-container">
       <div id="scanner-view" class="viewfinder-inner">
         <video id="video" autoplay playsinline class="hidden"></video>
         <img id="uploadedImagePreview" class="hidden" alt="Uploaded Ingredients">
-        <p id="placeholderText" style="color: #666;">Camera / Image Area</p>
+        <div id="placeholderText" style="color: #666; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+          <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <span>Camera / Image Area</span>
+        </div>
       </div>
     </div>
     
     <div id="action-area">
       <button id="startButton" class="gold-button">SCAN BARCODE</button>
-      <button id="uploadBtn" class="gold-button">UPLOAD PICTURE</button>
-      <input type="file" id="imageUpload" accept="image/*" class="hidden">
+      
+      <label class="gold-button" style="text-align: center;">
+        UPLOAD LABEL
+        <input type="file" id="imageUpload" accept="image/*" capture="environment" class="hidden">
+      </label>
+      
       <button id="resetButton" class="hidden gold-button full-width-btn">START OVER</button>
     </div>
 
     <div id="result" class="hidden luxury-card">
       <h2 id="productName" class="gold-text">Product Name</h2>
-      <p id="healthRatingText" style="margin:0; color:#aaa;">Overall Health Score</p>
+      <p style="margin:0; color:#888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Overall Health Score</p>
       <div id="healthPercentage" class="health-percentage">0%</div>
       
       <div class="overall-bar-container">
@@ -79,14 +91,16 @@
       <div id="detailedStats"></div>
     </div>
     
-    <p id="statusMessage" class="status-text hidden"></p>
+    <div id="statusMessage" class="status-text hidden"></div>
   </div>
   
   <script>
-    // --- JAVASCRIPT LOGIC ---
+    // --- APP CONFIGURATION ---
+    // Point this directly to your Hugging Face API
+    const AI_BACKEND_URL = "https://lord123hh-shsj.hf.space/upload";
+    
     const codeReader = new ZXing.BrowserMultiFormatReader();
     const startButton = document.getElementById('startButton');
-    const uploadBtn = document.getElementById('uploadBtn');
     const imageUpload = document.getElementById('imageUpload');
     const resetButton = document.getElementById('resetButton');
     
@@ -96,6 +110,9 @@
     const resultDiv = document.getElementById('result');
     const statusMessage = document.getElementById('statusMessage');
 
+    // ==========================================
+    // 1. BARCODE SCANNER (Uses Open Food Facts)
+    // ==========================================
     startButton.addEventListener('click', () => {
       resetUI();
       videoElement.classList.remove('hidden');
@@ -105,68 +122,17 @@
         if (result) {
           codeReader.reset();
           videoElement.classList.add('hidden');
-          placeholderText.innerText = "Barcode Scanned!";
+          placeholderText.innerHTML = "<span style='color: #c5a02f; font-weight: bold;'>Barcode Scanned!</span>";
           placeholderText.classList.remove('hidden');
-          fetchProductData(result.text);
+          fetchBarcodeData(result.text);
         }
       }).catch(err => {
-        showStatus("Camera access denied or unavailable.");
+        showStatus("Camera access denied or unavailable.", true);
       });
     });
 
-    uploadBtn.addEventListener('click', () => { imageUpload.click(); });
-
-    imageUpload.addEventListener('change', async (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        resetUI();
-        codeReader.reset(); 
-        
-        const imageUrl = URL.createObjectURL(file);
-        imagePreview.src = imageUrl;
-        imagePreview.classList.remove('hidden');
-        placeholderText.classList.add('hidden');
-        
-        showStatus("Reading text from image... This might take a few seconds.");
-
-        try {
-          const { data: { text } } = await Tesseract.recognize(imageUrl, 'eng');
-          const extractedData = parseOCRText(text);
-          renderResults("Scanned from Label", extractedData);
-        } catch (error) {
-          showStatus("Error reading the image. Try a clearer photo.");
-        }
-      }
-    });
-
-    resetButton.addEventListener('click', () => {
-      resetUI();
-      codeReader.reset();
-      placeholderText.innerText = "Camera / Image Area";
-      placeholderText.classList.remove('hidden');
-      startButton.classList.remove('hidden');
-      uploadBtn.classList.remove('hidden');
-      resetButton.classList.add('hidden');
-      imageUpload.value = '';
-    });
-
-    function resetUI() {
-      resultDiv.classList.add('hidden');
-      statusMessage.classList.add('hidden');
-      videoElement.classList.add('hidden');
-      imagePreview.classList.add('hidden');
-      startButton.classList.add('hidden');
-      uploadBtn.classList.add('hidden');
-      resetButton.classList.remove('hidden');
-    }
-
-    function showStatus(msg) {
-      statusMessage.innerText = msg;
-      statusMessage.classList.remove('hidden');
-    }
-
-    async function fetchProductData(barcode) {
-      showStatus(`Searching database for: ${barcode}...`);
+    async function fetchBarcodeData(barcode) {
+      showStatus(`<div class="spinner"></div> Searching database for: ${barcode}...`);
       try {
         const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
         const data = await response.json();
@@ -174,97 +140,149 @@
         if (data.status === 1) {
           renderResults(data.product.product_name || "Unknown Product", data.product.nutriments);
         } else {
-          showStatus("Product not found. Please use the Upload Picture button instead.");
+          showStatus("Product not found in global database. Please tap 'UPLOAD LABEL' to use the AI reader.", true);
         }
       } catch (error) {
-        showStatus("Error connecting to the food database.");
+        showStatus("Error connecting to the food database.", true);
       }
     }
 
-    // --- UPGRADED OCR TEXT PARSER ---
-    function parseOCRText(text) {
-      // 1. Clean the text: replace newlines with spaces and lowercase everything
-      const cleanText = text.replace(/\n/g, ' ').toLowerCase();
+    // ==========================================
+    // 2. AI VISION SCANNER (Uses your HF Backend)
+    // ==========================================
+    imageUpload.addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
 
-      // Check the developer console to see exactly what the AI read!
-      console.log("Raw OCR Text:", cleanText);
+      resetUI();
+      codeReader.reset(); 
+      
+      // Show image preview
+      const imageUrl = URL.createObjectURL(file);
+      imagePreview.src = imageUrl;
+      imagePreview.classList.remove('hidden');
+      placeholderText.classList.add('hidden');
+      
+      showStatus(`<div class="spinner"></div> AI is analyzing the label... please wait.`);
 
-      const extractValue = (keywords) => {
-        for (let keyword of keywords) {
-          // Look for keyword, allow up to 50 non-number characters, then grab the first number
-          const regex = new RegExp(keyword + "[^0-9]{0,50}?(\\d+\\.?\\d*)", "i");
-          const match = cleanText.match(regex);
-          if (match) {
-            return parseFloat(match[1]);
-          }
-        }
-        return null;
-      };
+      try {
+        // Send file to your backend
+        const formData = new FormData();
+        formData.append('image', file);
 
-      let sugar = extractValue(['added sugar', 'sugar', 'sugars']);
-      let fat = extractValue(['total fat', 'fat', 'lipids']);
-      let salt = extractValue(['sodium', 'salt']);
+        const response = await fetch(AI_BACKEND_URL, {
+            method: 'POST',
+            body: formData
+        });
 
-      // Fix for Sodium: If it is a huge number, it's in milligrams (mg). Convert to grams.
-      if (salt !== null && salt > 15) {
-        salt = salt / 1000;
+        if (!response.ok) throw new Error("AI Backend is offline or sleeping.");
+        
+        const aiData = await response.json();
+        console.log("AI Backend Data:", aiData);
+
+        if (aiData.error) throw new Error(aiData.error);
+
+        // Render the clean JSON data into the progress bars
+        renderResults("AI Scanned Label", aiData);
+
+      } catch (error) {
+        console.error(error);
+        showStatus(`Scan Failed: ${error.message}`, true);
+      } finally {
+        // Clear the input so they can upload the exact same file again if needed
+        imageUpload.value = '';
       }
+    });
 
-      console.log("Extracted Data -> Sugar:", sugar, "Fat:", fat, "Salt:", salt);
+    // ==========================================
+    // 3. UI CONTROLS & RENDERING
+    // ==========================================
+    resetButton.addEventListener('click', () => {
+      resetUI();
+      codeReader.reset();
+      placeholderText.innerHTML = `
+        <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        <span>Camera / Image Area</span>`;
+      placeholderText.classList.remove('hidden');
+      document.getElementById('action-area').classList.remove('hidden');
+      startButton.classList.remove('hidden');
+      imageUpload.parentElement.classList.remove('hidden');
+      resetButton.classList.add('hidden');
+    });
 
-      return {
-        sugars_100g: sugar,
-        fat_100g: fat,
-        salt_100g: salt
-      };
+    function resetUI() {
+      resultDiv.classList.add('hidden');
+      statusMessage.classList.add('hidden');
+      statusMessage.classList.remove('error-text');
+      videoElement.classList.add('hidden');
+      imagePreview.classList.add('hidden');
+      startButton.classList.add('hidden');
+      imageUpload.parentElement.classList.add('hidden'); // hide the label wrapper
+      resetButton.classList.remove('hidden');
+      
+      // Reset bars to 0
+      document.getElementById('overallBarFill').style.width = '0%';
+      document.getElementById('detailedStats').innerHTML = '';
     }
 
-    // RENDERING & BARS
+    function showStatus(msg, isError = false) {
+      statusMessage.innerHTML = msg;
+      statusMessage.classList.remove('hidden');
+      if (isError) statusMessage.classList.add('error-text');
+      else statusMessage.classList.remove('error-text');
+    }
+
+    // Mathematical rendering of the progress bars
     function renderResults(name, nutriments) {
       statusMessage.classList.add('hidden');
       resultDiv.classList.remove('hidden');
       document.getElementById('productName').innerText = name;
 
-      const sugar = nutriments?.sugars_100g || 0;
-      const fat = nutriments?.fat_100g || 0;
-      const salt = nutriments?.salt_100g || 0;
+      const sugar = parseFloat(nutriments?.sugars_100g) || 0;
+      const fat = parseFloat(nutriments?.fat_100g) || 0;
+      const salt = parseFloat(nutriments?.salt_100g) || 0;
 
-      // Catch if OCR failed entirely
-      if (sugar === 0 && fat === 0 && salt === 0 && nutriments?.sugars_100g === null) {
+      // Skeleton bug catch: If the AI returns all zeros and couldn't find anything
+      if (sugar === 0 && fat === 0 && salt === 0 && nutriments?.sugars_100g === undefined) {
         document.getElementById('healthPercentage').innerText = "❓";
         document.getElementById('overallBarFill').style.width = "0%";
         document.getElementById('healthPercentage').style.color = "#fff";
-        document.getElementById('detailedStats').innerHTML = "<p style='color: #ff4d4d;'>Could not read the numbers from this picture. Try holding the camera closer or straighter.</p>";
+        document.getElementById('detailedStats').innerHTML = "<p class='error-text' style='padding: 10px; border-radius: 8px;'>AI could not read the numbers from this picture. Try taking a clearer photo.</p>";
         return;
       }
 
+      // Calculate Percentages (Cap at 100% so bars don't overflow)
       const sugarPercent = Math.min(100, (sugar / 25) * 100); 
       const fatPercent = Math.min(100, (fat / 20) * 100);
       const saltPercent = Math.min(100, (salt / 1.5) * 100);
 
+      // Overall health formula (100% minus the average of the bad stuff)
       const averageBadness = (sugarPercent + fatPercent + saltPercent) / 3;
       const overallHealthPercent = Math.max(0, Math.round(100 - averageBadness));
 
+      // Update Overall UI
       document.getElementById('healthPercentage').innerText = `${overallHealthPercent}%`;
-      document.getElementById('overallBarFill').style.width = `${overallHealthPercent}%`;
       
+      // Color code the main percentage text
       if (overallHealthPercent >= 70) document.getElementById('healthPercentage').style.color = "#33cc33";
       else if (overallHealthPercent >= 40) document.getElementById('healthPercentage').style.color = "#ffcc00";
       else document.getElementById('healthPercentage').style.color = "#ff4d4d";
 
+      // Build the individual stat bars HTML
       const statsHTML = `
         ${createStatBar('Sugar', sugar, sugarPercent)}
         ${createStatBar('Fat', fat, fatPercent)}
         ${createStatBar('Salt', salt, saltPercent)}
       `;
-      
       document.getElementById('detailedStats').innerHTML = statsHTML;
       
+      // Animate the bars after a tiny delay for smooth visual effect
       setTimeout(() => {
+        document.getElementById('overallBarFill').style.width = `${overallHealthPercent}%`;
         document.getElementById('bar-Sugar').style.width = `${sugarPercent}%`;
         document.getElementById('bar-Fat').style.width = `${fatPercent}%`;
         document.getElementById('bar-Salt').style.width = `${saltPercent}%`;
-      }, 100);
+      }, 50);
     }
 
     function createStatBar(label, amount, percentage) {
@@ -277,8 +295,8 @@
       return `
         <div class="stat-row">
           <div class="stat-labels">
-            <span><strong>${label}:</strong> ${amount}g</span>
-            <span style="color: ${colorClass === 'fill-bad' ? '#ff4d4d' : colorClass === 'fill-moderate' ? '#ffcc00' : '#33cc33'}">${statusText}</span>
+            <span><strong>${label}</strong>: ${amount}g</span>
+            <span style="color: ${colorClass === 'fill-bad' ? '#ff4d4d' : colorClass === 'fill-moderate' ? '#ffcc00' : '#33cc33'}; font-weight: bold;">${statusText}</span>
           </div>
           <div class="stat-bar-bg">
             <div id="bar-${label}" class="stat-bar-fill ${colorClass}" style="width: 0%;"></div>
