@@ -26,7 +26,7 @@
     .luxury-card { margin-top: 25px; padding: 20px; border-radius: 8px; background: rgba(26, 26, 26, 0.9); border: 1px solid #c5a02f; box-shadow: 0 0 15px rgba(197, 160, 47, 0.3); }
     .gold-text { color: #c5a02f; font-size: 24px; margin-top: 0; margin-bottom: 5px; }
     
-    /* --- NEW PROGRESS BAR STYLES --- */
+    /* Progress Bars */
     .health-percentage { font-size: 36px; font-weight: bold; margin: 10px 0; text-shadow: 0 0 10px rgba(197, 160, 47, 0.8); }
     .overall-bar-container { width: 100%; height: 12px; background: #333; border-radius: 6px; margin-bottom: 20px; overflow: hidden; border: 1px solid #555; }
     .overall-bar-fill { height: 100%; background: linear-gradient(90deg, #ff4d4d, #ffcc00, #33cc33); transition: width 1s ease; }
@@ -35,12 +35,10 @@
     .stat-labels { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px; color: #ddd; }
     .stat-bar-bg { width: 100%; height: 8px; background: #222; border-radius: 4px; overflow: hidden; }
     .stat-bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
-    
-    /* Colors based on health impact */
     .fill-good { background-color: #33cc33; box-shadow: 0 0 5px #33cc33; }
     .fill-moderate { background-color: #ffcc00; box-shadow: 0 0 5px #ffcc00; }
     .fill-bad { background-color: #ff4d4d; box-shadow: 0 0 5px #ff4d4d; }
-    
+
     .status-text { color: #c5a02f; margin-top: 15px; font-weight: bold; }
     .hidden { display: none !important; }
   </style>
@@ -183,20 +181,45 @@
       }
     }
 
+    // --- UPGRADED OCR TEXT PARSER ---
     function parseOCRText(text) {
-      const extractValue = (keyword) => {
-        const regex = new RegExp(`${keyword}[\\s\\S]{0,20}?(\\d+\\.?\\d*)\\s*g`, 'i');
-        const match = text.match(regex);
-        return match ? parseFloat(match[1]) : null; 
+      // 1. Clean the text: replace newlines with spaces and lowercase everything
+      const cleanText = text.replace(/\n/g, ' ').toLowerCase();
+
+      // Check the developer console to see exactly what the AI read!
+      console.log("Raw OCR Text:", cleanText);
+
+      const extractValue = (keywords) => {
+        for (let keyword of keywords) {
+          // Look for keyword, allow up to 50 non-number characters, then grab the first number
+          const regex = new RegExp(keyword + "[^0-9]{0,50}?(\\d+\\.?\\d*)", "i");
+          const match = cleanText.match(regex);
+          if (match) {
+            return parseFloat(match[1]);
+          }
+        }
+        return null;
       };
+
+      let sugar = extractValue(['added sugar', 'sugar', 'sugars']);
+      let fat = extractValue(['total fat', 'fat', 'lipids']);
+      let salt = extractValue(['sodium', 'salt']);
+
+      // Fix for Sodium: If it is a huge number, it's in milligrams (mg). Convert to grams.
+      if (salt !== null && salt > 15) {
+        salt = salt / 1000;
+      }
+
+      console.log("Extracted Data -> Sugar:", sugar, "Fat:", fat, "Salt:", salt);
+
       return {
-        sugars_100g: extractValue('sugar'),
-        fat_100g: extractValue('fat'),
-        salt_100g: extractValue('salt') || extractValue('sodium')
+        sugars_100g: sugar,
+        fat_100g: fat,
+        salt_100g: salt
       };
     }
 
-    // --- NEW RENDERING & PERCENTAGE MATH ---
+    // RENDERING & BARS
     function renderResults(name, nutriments) {
       statusMessage.classList.add('hidden');
       resultDiv.classList.remove('hidden');
@@ -206,35 +229,29 @@
       const fat = nutriments?.fat_100g || 0;
       const salt = nutriments?.salt_100g || 0;
 
-      // Check if skeleton bug (no data found)
+      // Catch if OCR failed entirely
       if (sugar === 0 && fat === 0 && salt === 0 && nutriments?.sugars_100g === null) {
         document.getElementById('healthPercentage').innerText = "❓";
         document.getElementById('overallBarFill').style.width = "0%";
         document.getElementById('healthPercentage').style.color = "#fff";
-        document.getElementById('detailedStats').innerHTML = "<p>Could not read numbers. Try a clearer photo.</p>";
+        document.getElementById('detailedStats').innerHTML = "<p style='color: #ff4d4d;'>Could not read the numbers from this picture. Try holding the camera closer or straighter.</p>";
         return;
       }
 
-      // Calculate how "full" each bad stat bar should be (Percentage of daily limits)
-      // Cap at 100% so the bar doesn't overflow
       const sugarPercent = Math.min(100, (sugar / 25) * 100); 
       const fatPercent = Math.min(100, (fat / 20) * 100);
       const saltPercent = Math.min(100, (salt / 1.5) * 100);
 
-      // Overall health formula (100% minus the average of the bad stuff)
       const averageBadness = (sugarPercent + fatPercent + saltPercent) / 3;
       const overallHealthPercent = Math.max(0, Math.round(100 - averageBadness));
 
-      // Update Overall UI
       document.getElementById('healthPercentage').innerText = `${overallHealthPercent}%`;
       document.getElementById('overallBarFill').style.width = `${overallHealthPercent}%`;
       
-      // Color code the main percentage text
       if (overallHealthPercent >= 70) document.getElementById('healthPercentage').style.color = "#33cc33";
       else if (overallHealthPercent >= 40) document.getElementById('healthPercentage').style.color = "#ffcc00";
       else document.getElementById('healthPercentage').style.color = "#ff4d4d";
 
-      // Build the individual stat bars
       const statsHTML = `
         ${createStatBar('Sugar', sugar, sugarPercent)}
         ${createStatBar('Fat', fat, fatPercent)}
@@ -243,7 +260,6 @@
       
       document.getElementById('detailedStats').innerHTML = statsHTML;
       
-      // Animate the bars after a tiny delay
       setTimeout(() => {
         document.getElementById('bar-Sugar').style.width = `${sugarPercent}%`;
         document.getElementById('bar-Fat').style.width = `${fatPercent}%`;
@@ -251,7 +267,6 @@
       }, 100);
     }
 
-    // Helper function to build the HTML for one progress bar
     function createStatBar(label, amount, percentage) {
       let colorClass = "fill-good";
       let statusText = "Good";
